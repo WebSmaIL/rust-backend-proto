@@ -1,22 +1,32 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+// src/main.rs
+mod models;
+mod schema;
 
-#[get("/")]
-async fn testing_get() -> impl Responder {
-    HttpResponse::Ok().body("Hello world 2!")
-}
+#[macro_use]
+extern crate serde_derive;
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+use actix_web::{web, App, HttpServer};
+use diesel::r2d2::{self, ConnectionManager};
+use diesel::prelude::*;
+use dotenv::dotenv;
+use std::env;
+
+type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = r2d2::Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.");
+
+    HttpServer::new(move || {
         App::new()
-            .service(testing_get)
-            .route("/hey", web::get().to(manual_hello))
+            .app_data(web::Data::new(pool.clone()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind("127.0.0.1:8080")?
     .run()
     .await
 }
