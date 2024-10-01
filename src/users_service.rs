@@ -1,10 +1,9 @@
-use actix_web::delete;
-#[macro_use]
 use actix_web::{error, get, post, web, HttpResponse, Responder};
 use uuid::Uuid;
 
 use crate::{actions, models, DbPool};
 
+// get method for get user by id
 #[get("/user/{user_id}")]
 pub async fn get_user(
     pool: web::Data<DbPool>,
@@ -26,31 +25,28 @@ pub async fn get_user(
     })
 }
 
+// post method for insert user using body: name
 #[post("/user")]
 pub async fn add_user(
     pool: web::Data<DbPool>,
     form: web::Json<models::NewUser>,
 ) -> actix_web::Result<impl Responder> {
-    // use web::block to offload blocking Diesel queries without blocking server thread
     let user = web::block(move || {
-        // note that obtaining a connection from the pool is also potentially blocking
         let mut conn = pool.get()?;
 
         actions::insert_new_user(&mut conn, &form.name)
     })
     .await?
-    // map diesel query errors to a 500 error response
     .map_err(error::ErrorInternalServerError)?;
 
-    // user was added successfully; return 201 response with new user info
     Ok(HttpResponse::Created().json(user))
 }
 
+//  TODO: delete method for delete user by id
+// #[delete("/user/{user_id}")]
+// pub async fn del_user(
+//     pool: web::Data<DbPool>,
+//     user_uid: web::Path<Uuid>,
+// ) -> {
 
-#[delete("/user/{user_id}")]
-pub async fn del_user(
-    pool: web::Data<DbPool>,
-    user_uid: web::Path<Uuid>,
-) -> {
-
-}
+// }
