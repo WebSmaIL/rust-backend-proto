@@ -7,10 +7,38 @@ use crate::schema::users;
 #[diesel(table_name = users)]
 pub struct User {
     pub id: String,
-    pub name: String,
+    pub password: String,
+    pub email: String,
+    pub login: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FormattedUser {
+    pub id: String,
+    pub email: String,
+    pub login: String,
+}
+
+impl User {
+    pub fn format_user(&self) -> FormattedUser {
+        let formated_user: FormattedUser = FormattedUser {
+            id: self.id.clone(),
+            login: self.login.clone(),
+            email: self.email.clone(),
+        };
+        return formated_user;
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoginUser {
+    pub password: String,
+    pub login: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NewUser {
-    pub name: String,
+    pub password: String,
+    pub email: String,
+    pub login: String,
 }

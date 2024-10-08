@@ -25,7 +25,7 @@ pub async fn get_user(
     })
 }
 
-// post method for insert user using body: name
+// post method for insert user using body
 #[post("/user")]
 pub async fn add_user(
     pool: web::Data<DbPool>,
@@ -34,10 +34,29 @@ pub async fn add_user(
     let user = web::block(move || {
         let mut conn = pool.get()?;
 
-        actions::insert_new_user(&mut conn, &form.name)
+        actions::insert_new_user(&mut conn, &form)
     })
     .await?
-    .map_err(error::ErrorInternalServerError)?;
+    .map_err(error::ErrorInternalServerError)?
+    .format_user();
+
+    Ok(HttpResponse::Created().json(user))
+}
+
+// post method for insert user using body: name
+#[post("/login")]
+pub async fn login_user(
+    pool: web::Data<DbPool>,
+    form: web::Json<models::NewUser>,
+) -> actix_web::Result<impl Responder> {
+    let user = web::block(move || {
+        let mut conn = pool.get()?;
+
+        actions::insert_new_user(&mut conn, &form)
+    })
+    .await?
+    .map_err(error::ErrorInternalServerError)?
+    .format_user();
 
     Ok(HttpResponse::Created().json(user))
 }

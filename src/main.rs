@@ -3,7 +3,6 @@ extern crate diesel;
 
 use actix_web::{middleware, web, App, HttpServer};
 use diesel::{prelude::*, r2d2};
-use uuid::Uuid;
 
 mod actions;
 mod models;
