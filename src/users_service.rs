@@ -1,7 +1,11 @@
 use actix_web::{error, get, post, web, HttpResponse, Responder};
 use uuid::Uuid;
 
-use crate::{actions, models, DbPool};
+use crate::{
+    actions,
+    models::{self, FormattedUser},
+    DbPool,
+};
 
 // get method for get user by id
 #[get("/user/{user_id}")]
@@ -47,25 +51,17 @@ pub async fn add_user(
 #[post("/login")]
 pub async fn login_user(
     pool: web::Data<DbPool>,
-    form: web::Json<models::NewUser>,
+    form: web::Json<models::LoginUser>,
 ) -> actix_web::Result<impl Responder> {
-    let user = web::block(move || {
+    let result = web::block(move || {
         let mut conn = pool.get()?;
-
-        actions::insert_new_user(&mut conn, &form)
+        actions::check_user(&mut conn, &form)
     })
     .await?
-    .map_err(error::ErrorInternalServerError)?
-    .format_user();
+    .map_err(error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Created().json(user))
+    Ok(match result {
+        Ok(result) => HttpResponse::Ok().json(result),
+        Err(result) => HttpResponse::BadRequest().json(result),
+    })
 }
-
-//  TODO: delete method for delete user by id
-// #[delete("/user/{user_id}")]
-// pub async fn del_user(
-//     pool: web::Data<DbPool>,
-//     user_uid: web::Path<Uuid>,
-// ) -> {
-
-// }

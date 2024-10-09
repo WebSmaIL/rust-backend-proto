@@ -45,11 +45,6 @@ pub fn insert_new_user(
     Ok(new_user)
 }
 
-pub struct UserLogining {
-    is_login: bool,
-    user_info: FormattedUser,
-}
-
 pub fn check_user(
     conn: &mut PgConnection,
     user: &web::Json<models::LoginUser>,
@@ -61,17 +56,22 @@ pub fn check_user(
         .first::<models::User>(conn)
         .optional()?;
 
-    // return Ok(match (user_db) {
-    //     Some(user_db) => {
-    //         let hash = Sha256::digest(user.password.clone());
-    //         let string_hash = format!("{:X}", hash);
-    //         if string_hash == user_db.password {
-    //             let formatted_user = user_db.format_user();
-    //             return Ok(formatted_user);
-    //         } else {
-    //             return Ok("User password is incorrectly");
-    //         };
-    //     }
-    //     None => return O("User Not Found".to_string()),
-    });
+    let result = match user_db {
+        Some(user_db) => {
+            let hash = Sha256::digest(user.password.clone());
+            let string_hash = format!("{:X}", hash);
+            let is_true_pass = user_db.password == string_hash;
+            println!("request hash {}", string_hash);
+            println!("db hash {:?}", user_db.password);
+
+            let is_true_result = match is_true_pass {
+                true => Ok(user_db.format_user()),
+                false => Err("User password is incorrectly".to_string()),
+            };
+            is_true_result
+        }
+        None => Err("User Not Found".to_string()),
+    };
+
+    return Ok(result);
 }

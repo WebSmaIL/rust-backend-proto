@@ -26,6 +26,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(users_service::get_user)
             .service(users_service::add_user)
+            .service(users_service::login_user)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

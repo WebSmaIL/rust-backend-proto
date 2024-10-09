@@ -7,9 +7,9 @@ use crate::schema::users;
 #[diesel(table_name = users)]
 pub struct User {
     pub id: String,
-    pub password: String,
-    pub email: String,
     pub login: String,
+    pub email: String,
+    pub password: String,
 }
 
 #[derive(Serialize, Deserialize)]
